@@ -1,0 +1,108 @@
+<?php
+// $Id: taxiselect.install,v 1.2.2.1.2.5 2009/11/19 11:02:09 aland Exp $
+
+/**
+ * @file
+ * Installation and uninstallation functions for the taxiselect module.
+ */
+
+/**
+ * Implementation of hook_install().
+ *
+ * This must be called after taxonomy module in hook chains
+ */
+function taxiselect_install() {
+  taxiselect_incompatible_modules_fix();
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function taxiselect_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name like 'taxiselect_message_not_found_%%'");
+  db_query("DELETE FROM {variable} WHERE name like 'taxiselect_message_multiple_matches_%%'");
+
+  variable_del('taxiselect_free_tagging');
+  variable_del('taxiselect_skip_root');
+  variable_del('taxiselect_autocomplete_only');
+
+  variable_del('taxiselect_trigger_length');
+  variable_del('taxiselect_response_limit');
+  variable_del('taxiselect_node_types');
+  variable_del('taxiselect_vocabularies');
+  variable_del('taxiselect_suggestions_limit');
+  variable_del('taxiselect_reverse_lookup');
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function taxiselect_enable() {
+  variable_set('taxonomy_override_selector', TRUE);
+  drupal_set_message(t("Drupal's taxonomy selects are now overridden by TaxiSelect.<br />You can <a href=\"!configure-url\">configure</a> it on node forms too.",
+      array('!configure-url' => url('admin/content/taxonomy/taxiselect'))), 'warning');
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function taxiselect_disable() {
+  variable_set('taxonomy_override_selector', FALSE);
+  drupal_set_message(t("Drupal's taxonomy selects are now restored."));
+}
+
+/**
+ * Helper function to fix these module issues.
+ */
+function taxiselect_incompatible_modules_fix() {
+  $incompatible_modules = array('content_taxonomy', 'i18ntaxonomy', 'og_vocab', 'taxonomy');
+  $placeholders = db_placeholders($incompatible_modules, 'varchar');
+  $weight = max(20, db_result(db_query("SELECT MAX(weight) + 2 FROM {system} WHERE name IN (". $placeholders .")", $incompatible_modules)));
+  db_query("UPDATE {system} SET weight = %d WHERE name = 'taxiselect'", $weight);
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function taxiselect_update_6000() {
+  taxiselect_enable();
+  return array();
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function taxiselect_update_6001() {
+  $skip = variable_get('taxiselect_skip_root', 0);
+  foreach (taxonomy_get_vocabularies() as $vocabulary) {
+    variable_set('taxiselect_skip_root_'. $vocabulary->vid, $skip);
+  }
+  return array();
+}
+/**
+ * Implementation of hook_update_N().
+ *
+ * Cleaning up the administrative options.
+ */
+function taxiselect_update_6201() {
+  $free_tagging_options = array();
+  $skip_root_options = array();
+  foreach (taxonomy_get_vocabularies() as $vocabulary) {
+    $free_tagging_options[$vocabulary->vid] = variable_get('taxiselect_free_tagging_'. $vocabulary->vid, 0);
+    $skip_root_options[$vocabulary->vid] = variable_get('taxiselect_skip_root_'. $vocabulary->vid, 0);
+    variable_del('taxiselect_free_tagging_'. $vocabulary->vid);
+    variable_del('taxiselect_skip_root_'. $vocabulary->vid);
+  }
+  variable_set('taxiselect_free_tagging', $free_tagging_options);
+  variable_set('taxiselect_skip_root', $skip_root_options);
+  return array();
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function taxiselect_update_6202() {
+  taxiselect_incompatible_modules_fix();
+  menu_rebuild();
+  return array(array('success' => TRUE, 'query' => "'taxiselect' module weight has been updated."));
+}

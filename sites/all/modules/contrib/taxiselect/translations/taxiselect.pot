@@ -1,0 +1,302 @@
+# $Id: taxiselect.pot,v 1.1.2.2.2.4 2009/10/18 02:49:51 aland Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  taxiselect-admin-settings.tpl.php,v 1.1.2.1 2009/09/28 15:53:34 aland
+#  taxiselect.admin.inc,v 1.1.2.1.2.4 2009/10/03 02:27:34 aland
+#  taxiselect.elements.inc,v 1.1.2.5 2009/10/03 02:27:34 aland
+#  taxiselect.pages.inc,v 1.1.2.4 2009/10/02 08:47:00 aland
+#  taxiselect.theme.inc,v 1.1.2.3 2009/09/28 15:53:34 aland
+#  taxiselect.module,v 1.5.2.4.2.3 2009/09/28 15:53:34 aland
+#  taxiselect.install,v 1.2.2.1.2.3 2009/09/28 15:53:34 aland
+#  taxiselect.info,v 1.1.4.1.2.1 2009/09/06 15:01:06 aland
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-10-18 12:32+1100\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: taxiselect-admin-settings.tpl.php:8
+msgid "Global settings"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:11
+msgid "Global TaxiSelect settings"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:18
+msgid "Use TaxiSelect for the selected content types"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:19
+msgid "Use TaxiSelect for administrating this vocabulary"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:20
+msgid "Enable pseudo free tagging"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:21
+msgid "Hide top level categories"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:22
+msgid "Use the reduced autocomplete when using single select vocabularies."
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:25 taxiselect.admin.inc:122
+msgid "Custom term not found message"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:26 taxiselect.admin.inc:134
+msgid "Custom multiple matches message"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:28
+msgid "Vocabulary level TaxiSelect settings"
+msgstr ""
+
+#: taxiselect-admin-settings.tpl.php:31
+msgid "!vocabulary settings"
+msgstr ""
+
+#: taxiselect.admin.inc:15
+msgid "Administration terms per page"
+msgstr ""
+
+#: taxiselect.admin.inc:18
+msgid "This is a global flag to change the number of terms per page listed on the \"list terms\" admin page."
+msgstr ""
+
+#: taxiselect.admin.inc:24
+msgid "Taxiselect suggestion limit"
+msgstr ""
+
+#: taxiselect.admin.inc:27
+msgid "Shows a number of suggestions if the term matches multiple values or is not found on form submission. You must use the string [suggestions] in the forms error message strings for these to show."
+msgstr ""
+
+#: taxiselect.admin.inc:32
+msgid "Taxiselect trigger length"
+msgstr ""
+
+#: taxiselect.admin.inc:35
+msgid "Minimum number of characters before returning an AJAX response. Useful to reduce server load."
+msgstr ""
+
+#: taxiselect.admin.inc:40
+msgid "Taxiselect response limit"
+msgstr ""
+
+#: taxiselect.admin.inc:43
+msgid "Maximum number of results to return per AJAX response. Useful to increase response times/reduce server load or to offer more choices to the user."
+msgstr ""
+
+#: taxiselect.admin.inc:48
+msgid "Content types to associate this widget with"
+msgstr ""
+
+#: taxiselect.admin.inc:51
+msgid "A list of node content types you want to use the taxiselect element with."
+msgstr ""
+
+#: taxiselect.admin.inc:101
+msgid "EXAMPLE VOCAB NAME"
+msgstr ""
+
+#: taxiselect.admin.inc:103
+msgid "EXAMPLE USER INPUT"
+msgstr ""
+
+#: taxiselect.admin.inc:106
+msgid "Help"
+msgstr ""
+
+#: taxiselect.admin.inc:112
+msgid "Pseudo free tagging"
+msgstr ""
+
+#: taxiselect.admin.inc:113
+msgid "This option provides a way to free tag new terms into hierarchical vocabularies."
+msgstr ""
+
+#: taxiselect.admin.inc:113
+msgid "This option can be used to create one new term at a time when submitting the form or by using the %add or %replace buttons. This term will be saved even if the page is not saved. If the \"%hide\" option is selected, the new term is appended to the first parental match found."
+msgstr ""
+
+#: taxiselect.admin.inc:113
+msgid "Hide top level categories."
+msgstr ""
+
+#: taxiselect.admin.inc:113 taxiselect.elements.inc:218
+msgid "Add"
+msgstr ""
+
+#: taxiselect.admin.inc:113 taxiselect.elements.inc:218
+msgid "Replace"
+msgstr ""
+
+#: taxiselect.admin.inc:117
+msgid "Hiding top level categories"
+msgstr ""
+
+#: taxiselect.admin.inc:118
+msgid "If enabled, the root level terms will not be visible."
+msgstr ""
+
+#: taxiselect.admin.inc:118
+msgid "For example, if the root level terms are continents, such as Asia, and the second level terms are countries, this option will hide all continental terms. This removes the ability to select root level terms. This option is ignored on administration pages."
+msgstr ""
+
+#: taxiselect.admin.inc:123;135
+msgid "This allows you to override the standard error message of:"
+msgstr ""
+
+#: taxiselect.admin.inc:125
+msgid "Three tokens are available:"
+msgstr ""
+
+#: taxiselect.admin.inc:127
+msgid "!token The suggestions found when there are no matches or multiple matches.<br/>See %func to theme the suggestion results."
+msgstr ""
+
+#: taxiselect.admin.inc:128
+msgid "!token The vocabulary name."
+msgstr ""
+
+#: taxiselect.admin.inc:129
+msgid "!token The user submitted value."
+msgstr ""
+
+#: taxiselect.admin.inc:137
+msgid "The three tokens !suggestion, !vocab, and !term are available."
+msgstr ""
+
+#: taxiselect.admin.inc:163;180
+msgid "Parents"
+msgstr ""
+
+#: taxiselect.admin.inc:171;181
+msgid "Related terms"
+msgstr ""
+
+#: taxiselect.admin.inc:180
+msgid "Parent terms"
+msgstr ""
+
+#: taxiselect.admin.inc:180
+msgid "root"
+msgstr ""
+
+#: taxiselect.admin.inc:181
+msgid "none"
+msgstr ""
+
+#: taxiselect.elements.inc:96
+msgid "A term can't be related to itself."
+msgstr ""
+
+#: taxiselect.elements.inc:99
+msgid "A term can't be the child of itself, nor of its children."
+msgstr ""
+
+#: taxiselect.elements.inc:109
+msgid "The term %term could not be added as it would exceeded the maximum number of allowed values !count for %vocab."
+msgstr ""
+
+#: taxiselect.elements.inc:154
+msgid "The value %term was added to %vocab."
+msgstr ""
+
+#: taxiselect.elements.inc:165
+msgid "Invalid vocabulary"
+msgstr ""
+
+#: taxiselect.elements.inc:167
+msgid "Error: No defined vocabulary!"
+msgstr ""
+
+#: taxiselect.elements.inc:249
+msgid "Remove"
+msgstr ""
+
+#: taxiselect.elements.inc:267
+msgid "No terms are selected."
+msgstr ""
+
+#: taxiselect.pages.inc:44
+msgid "A comma-separated list of terms describing this content. Example: funny, bungee jumping, \"Company, Inc.\"."
+msgstr ""
+
+#: taxiselect.pages.inc:93
+msgid "Vocabularies"
+msgstr ""
+
+#: taxiselect.pages.inc:156
+msgid "!term (new)"
+msgstr ""
+
+#: taxiselect.theme.inc:31
+msgid "Did you mean %suggestion?"
+msgstr ""
+
+#: taxiselect.theme.inc:34
+msgid "Did you mean one of the following? !suggestions"
+msgstr ""
+
+#: taxiselect.theme.inc:37
+msgid "No suggestions were found."
+msgstr ""
+
+#: taxiselect.theme.inc:66
+msgid "Multiple possible matches were found for the %term in %vocabulary."
+msgstr ""
+
+#: taxiselect.theme.inc:94
+msgid "The term %term could not be found in %vocabulary."
+msgstr ""
+
+#: taxiselect.module:408
+msgid "Top level term: !term"
+msgstr ""
+
+#: taxiselect.module:21
+msgid "Taxiselect AHAH add callback"
+msgstr ""
+
+#: taxiselect.module:37
+msgid "Taxiselect settings"
+msgstr ""
+
+#: taxiselect.module:38
+msgid "Change the number of terms returned and trigger points."
+msgstr ""
+
+#: taxiselect.install:40
+msgid "Drupal's taxonomy selects are now overridden by TaxiSelect.<br />You can <a href=\"!configure-url\">configure</a> it on node forms too."
+msgstr ""
+
+#: taxiselect.install:49
+msgid "Drupal's taxonomy selects are now restored."
+msgstr ""
+
+#: taxiselect.info:0
+msgid "Taxiselect"
+msgstr ""
+
+#: taxiselect.info:0
+msgid "An autocomplete heiracharial taxonomy select widget"
+msgstr ""
+
+#: taxiselect.info:0
+msgid "Taxonomy"
+msgstr ""

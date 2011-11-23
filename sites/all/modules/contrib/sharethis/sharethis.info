@@ -1,0 +1,6 @@
+name = ShareThis (Official)
+description = This module adds the <a href="http://sharethis.com/">ShareThis</a> widget to your site.
+core = 6.x
+package = Sharing
+
+

@@ -1,0 +1,46 @@
+/* $Id: taxiselect.css,v 1.1.2.1 2009/09/06 15:01:06 aland Exp $ */
+.taxiselect .form-item, .taxiselect .form-submit {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+.taxiselect-add, .taxiselect-autocomplete {
+  display: inline;
+  float: left;
+}
+
+.taxiselect-term-path {
+  font-style: italic;
+  margin-left: 1em;
+}
+.taxiselect-selected-terms .form-item {
+  color: #ff0000;
+  float: right;
+}
+.taxiselect .even, .taxiselect .odd {
+  border-bottom: 1px solid #EEEEEE;
+  width: 100%;
+  width: auto;
+  margin: 0;
+  padding: 0.1em 1.2em 0.1em 0.2em;
+}
+
+.taxiselect .odd {
+  background-color: #F2F2F2;
+}
+
+.taxiselect .selected-terms {
+  border: 1px solid #CCCCCC;
+  color: gray;
+  font-size: 90%;
+  margin: 0;
+  padding: 0;
+  max-width: 98%;
+  min-width: 20em;
+  width: auto;
+  display: inline-block;
+}
+
+#autocomplete li, #autocomplete li div {
+  margin: 0;
+}

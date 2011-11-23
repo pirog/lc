@@ -1,0 +1,12 @@
+; $Id: taxiselect.info,v 1.1.4.1.2.1 2009/09/06 15:01:06 aland Exp $
+name = Taxiselect
+description = "An autocomplete heiracharial taxonomy select widget"
+core = 6.x
+package = Taxonomy
+dependencies[] = taxonomy
+; Information added by drupal.org packaging script on 2009-12-08
+version = "6.x-2.0-rc1"
+core = "6.x"
+project = "taxiselect"
+datestamp = "1260272773"
+

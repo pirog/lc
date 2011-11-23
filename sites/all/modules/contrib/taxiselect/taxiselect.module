@@ -1,0 +1,444 @@
+<?php
+// $Id: taxiselect.module,v 1.5.2.4.2.5 2009/11/19 11:02:09 aland Exp $
+
+/**
+ * @file
+ * Allows a user to specify that a taxonomy field should use the
+ * autocomplete text field and not the drop down/select boxes.
+ */
+
+/**
+ * Defines new elements for the module.
+ */
+module_load_include('inc', 'taxiselect', 'taxiselect.elements');
+
+/**
+ * Implementation of hook_menu().
+ */
+function taxiselect_menu() {
+  // AHAH & AJAX callbacks
+  $items['taxiselect/ahah/%/%'] = array(
+    'title' => 'Taxiselect AHAH add callback',
+    'page callback' => 'taxiselect_add_ahah',
+    'page arguments' => array(3),
+    'access arguments' => array('access content'),
+    'file' => 'taxiselect.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['taxiselect/autocomplete/%'] = array(
+    'page callback' => 'taxiselect_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'taxiselect.pages.inc',
+  );
+
+  // Admin settings
+  $items['admin/content/taxonomy/taxiselect'] = array(
+    'title' => 'Taxiselect settings',
+    'description' => 'Change the number of terms returned and trigger points.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('taxiselect_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'taxiselect.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function taxiselect_theme() {
+  return array(
+    'taxiselect_element' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    // Custom messages, use THEME_taxiselect_message_suggestions()
+    // for the suggestions prefix.
+    'taxiselect_message_multiple_matches' => array(
+      'arguments' => array('vocabulary' => NULL, 'value' => NULL),
+      'file' => 'taxiselect.theme.inc',
+    ),
+    'taxiselect_message_not_found' => array(
+      'arguments' => array('vocabulary' => NULL, 'value' => NULL),
+      'file' => 'taxiselect.theme.inc',
+    ),
+    'taxiselect_message_suggestions' => array(
+      'arguments' => array('vocabulary' => NULL, 'value' => NULL, 'type' => 'not_found'),
+      'file' => 'taxiselect.theme.inc',
+    ),
+    'taxiselect_suggestion' => array(
+      'arguments' => array('escaped_terms' => array(), 'vid' => NULL),
+    ),
+    'taxiselect_admin_settings' => array(
+      'arguments' => array('form' => NULL),
+      'template' => 'taxiselect-admin-settings',
+    ),
+  );
+}
+
+/**
+ * Theming hook for the autocomplete.
+ */
+function theme_taxiselect_suggestion($escaped_terms, $vid = NULL) {
+  $sep = variable_get('taxiselect_reverse_lookup', 0) ? ', ' : ' &raquo; ';
+  return implode($sep, $escaped_terms);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function taxiselect_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['type']) && isset($form['#node']) && variable_get('taxonomy_override_selector', FALSE) && $form['type']['#value'] .'_node_form' == $form_id) {
+    module_load_include('inc', 'taxiselect', 'taxiselect.pages');
+    _taxiselect_node_form_alter($form, $form_state);
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_alter().
+ */
+function taxiselect_form_taxonomy_form_term_alter(&$form, &$form_state) {
+  if (variable_get('taxonomy_override_selector', FALSE)) {
+    module_load_include('inc', 'taxiselect', 'taxiselect.admin');
+    return _taxiselect_form_taxonomy_form_term_alter($form, $form_state);
+  }
+}
+
+/**
+ * Escapes a term or an array of terms.
+ */
+function taxiselect_escape_terms($tags, $check_plain = FALSE) {
+  if (is_array($tags)) {
+    foreach ($tags as $index => $tag) {
+      $tags[$index] = _taxiselect_escape_term($tag, $check_plain);
+    }
+    return $tags;
+  }
+  else {
+    return _taxiselect_escape_term($tags, $check_plain);
+  }
+}
+
+/**
+ * Private helper function.
+ */
+function _taxiselect_escape_term($tag, $check_plain) {
+  if (strpos($tag, ',') !== FALSE || strpos($tag, '"') !== FALSE) {
+    $tag = '"'. str_replace('"', '""', $tag) .'"';
+  }
+  return $check_plain ? check_plain($tag) : $tag;
+}
+
+/**
+ * Core functionality for the ajax response.
+ *
+ * @param $vid
+ *   The vocab vid.
+ * @param $string
+ *   The term string to search for.
+ * @param $limit
+ *   The max number results to return.
+ * @return $matches
+ *   An array of matched terms.
+ */
+function taxiselect_suggestions($vid, $string, $limit, $free_tag = FALSE) {
+  $matches = array();
+  if (drupal_strlen($string) >= variable_get('taxiselect_trigger_length', 3)) {
+    $search_terms = taxiselect_explode_tags($string, FALSE);
+    if (variable_get('taxiselect_reverse_lookup', 0)) {
+      $search_terms = array_reverse($search_terms);
+    }
+
+    // This gives fuzzy matches
+    $items =  taxiselect_match_exact_path($search_terms, $vid, $limit);
+    foreach ($items as $item) {
+      $matches[key($item)] = $item;
+    }
+    if ($free_tag && empty($matches)) {
+      $new_term = array_shift($search_terms);
+      $matches[] = array($new_term);
+      if (count($search_terms)) {
+        $items =  taxiselect_match_exact_path($search_terms, $vid, $limit - 1);
+        foreach ($items as $item) {
+          array_unshift($item, $new_term);
+          $matches[] = $item;
+        }
+      }
+    }
+  }
+  uasort($matches, 'taxiselect_sort');
+  return $matches;
+}
+
+/**
+ * Sorts two arrays of strings alphabetically.
+ */
+function taxiselect_sort($a, $b) {
+  $_a = current($a);
+  $_b = current($b);
+  do {
+    if ($cmp = strcasecmp($_a, $_b)) {
+      return $cmp;
+    }
+    $_a = next($a);
+    $_b = next($b);
+  }
+  while ($_a && $_b);
+  if ($_a && !$_b) {
+    return 1;
+  }
+  if (!$_a && $_b) {
+    return -1;
+  }
+  return 0;
+}
+
+/**
+ * Helper function to determine if the root should be
+ * shown.
+ *
+ * This option is disabled on admin pages.
+ */
+function taxiselect_skip_root($vid) {
+  if (_taxiselect_is_admin_path()) {
+    return FALSE;
+  }
+  $taxiselect_vocabularies = array_filter(variable_get('taxiselect_skip_root', array()));
+  return in_array($vid, $taxiselect_vocabularies);
+}
+
+/**
+ * Checks for autocomplete options.
+ */
+function taxiselect_autocomplete_only($vid) {
+  if (_taxiselect_is_admin_path()) {
+    return FALSE;
+  }
+  $taxiselect_vocabularies = array_filter(variable_get('taxiselect_autocomplete_only', array()));
+  return in_array($vid, $taxiselect_vocabularies);
+}
+
+/**
+ * Helper function to determine if free tagging is allowed.
+ */
+function taxiselect_free_tagging($vid) {
+  if (_taxiselect_is_admin_path()) {
+    return FALSE;
+  }
+  $taxiselect_vocabularies = array_filter(variable_get('taxiselect_free_tagging', array()));
+  return in_array($vid, $taxiselect_vocabularies);
+}
+
+/**
+ * Helper function to detect administrative paths.
+ * This is used to prevent skipping root / free-tagging on admin pages and
+ * the admin page AHAH callbacks.
+ */
+function _taxiselect_is_admin_path() {
+  if (arg(0) == 'admin') {
+    return TRUE;
+  }
+  if (_taxiselect_is_ahah() && arg(2) == 'admin') {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Helper function to detect AHAH callbacks.
+ */
+function _taxiselect_is_ahah() {
+  if (arg(0) == 'taxiselect' && (arg(1) == 'autocomplete' || arg(1) == 'ahah' )) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * This checks the strict heirachical path, with an optional fuzzy match.
+ * Missing a child - parent relationship will cause this to fail.
+ *
+ * @param $search_terms
+ *   An array of term names.
+ * @param $vid
+ *   The vocab vid. Optional, but increases performance.
+ * @param $limit
+ *   The number results to return
+ * @param $use_wildcard
+ *   Use the % wildcard. Eg: x like 's%' or x = 's';
+ * @param $validate
+ *   This checks that the number of parents for a term.
+ * @param $exclude
+ *   This excludes potential terms from the results, required
+ *   for term administration.
+ * @return $items
+ *   An array of located matches (an array of terms) up to the limit.
+ */
+function taxiselect_match_exact_path($search_terms, $vid = NULL, $limit = 10, $use_wildcard = TRUE, $validate = FALSE, $exclude = array()) {
+  $skip_root = taxiselect_skip_root($vid);
+  $items = array();
+  $fields = array();
+  $conditions = array();
+  $joins = array();
+  $args = array();
+  $index = 0;
+  foreach ($search_terms as $index => $search_term) {
+    $fields[] = "t{$index}.tid AS tid{$index}";
+    $fields[] = "t{$index}.name AS name{$index}";
+    if ($vid) {
+      $conditions[] = "t{$index}.vid = %d";
+      $args[] = $vid;
+    }
+    if ($use_wildcard) {
+      $conditions[] = "(LOWER(t{$index}.name) LIKE LOWER('%s%%') OR LOWER(t{$index}.name) LIKE LOWER('%% %s%%'))";
+      $args[] = $search_term;
+      $args[] = $search_term;
+    }
+    else {
+      $conditions[] = "LOWER(t{$index}.name) = LOWER('%s')";
+      $args[] = $search_term;
+    }
+    if ($index) {
+      $last_index = $index - 1;
+      $joins[] = "INNER JOIN  {term_hierarchy} h{$last_index} ON t{$last_index}.tid = h{$last_index}.tid";
+      $joins[] = "INNER JOIN  {term_data} t{$index} ON t{$index}.tid = h{$last_index}.parent";
+    }
+  }
+  $joins[] = "INNER JOIN  {term_hierarchy} h{$index} ON t{$index}.tid = h{$index}.tid";
+
+  // restrict to deep of at least 1
+  if ($skip_root) {
+    $conditions[] = "h{$index}.parent != 0";
+  }
+  // Forces the correct parrent item, so "a, b" does not match "a, b, c"
+  if ($validate) {
+    if ($skip_root) {
+      $root_index = $index + 1;
+      $joins[] = "INNER JOIN  {term_hierarchy} h{$root_index} ON t{$index}.tid = h{$root_index}.tid";
+      $conditions[] = "h{$root_index}.parent != 0";
+    }
+    else {
+      $conditions[] = "h{$index}.parent = 0";
+    }
+  }
+  if (count($exclude)) {
+    $placeholders = implode(',', array_fill(0, count($exclude), '%d'));
+    $conditions[] = 't0.tid NOT IN ('. $placeholders .')';
+    $args = array_merge($args, $exclude);
+  }
+  $fields = implode(', ', $fields);
+  $joins = implode(' ', $joins);
+  $conditions = implode(' AND ', $conditions);
+
+  $result = db_query_range("
+      SELECT    {$fields}
+      FROM      {term_data} t0 {$joins}
+      WHERE     {$conditions}", $args, 0, $limit);
+  while ($rset = db_fetch_array($result)) {
+    // recreate located path, and record the last tid (to create parental path)
+    $item = array();
+    $pid = 0;
+    $counter = 1;
+    foreach ($rset as $index => $data) {
+      if ($counter % 2) {
+        $pid = $data;
+      }
+      else {
+        $item[$pid] = $data;
+      }
+      $counter++;
+    }
+    $parents = taxonomy_get_parents_all($pid);
+    if (count($parents) > 1) {
+      // current term included
+      array_shift($parents);
+      // We do not want the root node
+      if ($skip_root) {
+        array_pop($parents);
+      }
+      foreach ($parents as $parent) {
+        $item[$parent->tid] = $parent->name;
+      }
+    }
+    $items[] = $item;
+  }
+  return $items;
+}
+
+/**
+ * For any term, generate the full parent path.
+ *
+ * @example Simple usage
+ *
+ * $path = '';
+ * $parents = taxiselect_parent_path($term);
+ * # Check that the $tid was valid
+ * if (count($parents)) {
+ *   taxiselect_escape_terms($parents);
+ *   $path = implode(' &raquo; ', $parents);
+ * }
+ *
+ * @param $tid
+ *   The term tid or term object.
+ * @return $path
+ *   An array terms representing the term with parental info.
+ */
+function taxiselect_parent_path($term) {
+  $path = array(0 => 'Term not found');
+  if ($term) {
+    $vid = $term->vid;
+    $term = drupal_clone($term);
+    $path = array($term->tid => $term->name);
+    do {
+      $placeholders = implode(',', array_fill(0, count($path), '%d'));
+      $args = array_keys($path);
+      array_unshift($args, $term->tid);
+      $parent = db_fetch_object(db_query("
+          SELECT        h.parent AS tid, p.name
+          FROM          {term_data} d
+            INNER JOIN  {term_hierarchy} h ON d.tid = h.tid
+            INNER JOIN  {term_data} p ON p.tid = h.parent
+          WHERE         d.tid = %d
+            AND         h.parent NOT IN ({$placeholders})
+          LIMIT 1", $args));
+      if ($parent) {
+        $path[$parent->tid] = $parent->name;
+        $term->tid = $parent->tid;
+      }
+    }
+    while ($parent);
+    if (taxiselect_skip_root($vid)) {
+      $root = array_pop($path);
+      if (empty($path) && !empty($root)) {
+        $path[] = t('Top level term: !term', array('!term' => $root));
+      }
+    }
+  }
+  return $path;
+}
+
+/**
+ * Duplicates the core function drupal_explode_tags() with a
+ * flag that makes preventing duplicates optional.
+ */
+function taxiselect_explode_tags($tags, $filter_duplicates = TRUE) {
+  // This regexp allows the following types of user input:
+  // this, "somecompany, llc", "and ""this"" w,o.rks", foo bar
+  $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+  preg_match_all($regexp, $tags, $matches);
+  $typed_tags = $filter_duplicates ? array_unique($matches[1]) : $matches[1];
+
+
+  $tags = array();
+  foreach ($typed_tags as $tag) {
+    // If a user has escaped a term (to demonstrate that it is a group,
+    // or includes a comma or quote character), we remove the escape
+    // formatting so to save the term into the database as the user intends.
+    $tag = trim(str_replace('""', '"', preg_replace('/^"(.*)"$/', '\1', $tag)));
+    if ($tag != "") {
+      $tags[] = $tag;
+    }
+  }
+
+  return $tags;
+}
