@@ -59,7 +59,7 @@ function jcarousel_views_ajax() {
           $view->pager['use_pager'] = FALSE;
           $view->pager['offset'] = $first;
           $view->pager['items_per_page'] = $last - $first;
-  
+
           $view->display[$display_id]->handler->set_option('use_pager', 0);
           $view->display[$display_id]->handler->set_option('offset', $first);
           $view->display[$display_id]->handler->set_option('items_per_page', $last - $first);
@@ -114,8 +114,14 @@ function jcarousel_views_add($view, $display_id = NULL) {
   }
 
   // Views 3 ? Views 3 : Views 2.
-  $count_query = isset($view->query->count_query) ? $view->query->count_query : $view->build_info['count_query'];
+  $count_query = isset($view->query->count_query) ? $view->query->count_query : db_rewrite_sql($view->build_info['count_query'], $view->base_table, $view->base_field, array('view' => &$view));
   $count_args = isset($view->query->query_args) ? $view->query->query_args : $view->build_info['query_args'];
+
+  // By default limit the scrolling to the same number of items as are visible
+  // to avoid display glitches.
+  if (empty($options['scroll']) && !empty($options['visible'])) {
+    $options['scroll'] = $options['visible'];
+  }
 
   // Get the total number of items in this view.
   $replacements = module_invoke_all('views_query_substitutions', $view);
@@ -195,12 +201,12 @@ function template_preprocess_jcarousel_view(&$variables) {
   $settings = jcarousel_views_add($view, $display_id);
 
   // Build the list of classes for the carousel.
-  $options = $view->style_options;
+  $options = $view->style_plugin->options;
   $variables['jcarousel_classes_array'] = array(
     'jcarousel',
     views_css_safe('jcarousel-view--' . $view->name . '--' . $display_id),
   );
-  if ($options['skin']) {
+  if (!empty($options['skin'])) {
     $variables['jcarousel_classes_array'][] = 'jcarousel-skin-' . $options['skin'];
   }
   $variables['jcarousel_classes'] = implode(' ', $variables['jcarousel_classes_array']);

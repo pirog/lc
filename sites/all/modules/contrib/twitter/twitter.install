@@ -304,7 +304,9 @@ function twitter_install() {
  * We're safe just running the basic install for update_1.
  */
 function twitter_update_6000() {
+  $ret = array();
   twitter_install();
+  return $ret;
 }
 
 /**
@@ -708,6 +710,18 @@ function twitter_update_6301() {
                ));
 
    return $ret;
+}
+
+/**
+ * Update new default_state variable to preserve existing settings.
+ */
+function twitter_update_6302() {
+  $ret = array();
+  $default_seting = variable_get('twitter_default_state', NULL);
+  if ($default_setting === NULL) {
+    variable_set('twitter_post_default_state', 'create');
+  }
+  return $ret;
 }
 
 function twitter_uninstall() {
